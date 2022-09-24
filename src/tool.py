@@ -10,12 +10,7 @@ def sendCommand(command:str):
     '''
     Different treatment for each
     command.
-    '''
-
-    if command.find("{") > -1:
-        sleepTime = command[command.find("{") + 1:command.find("}")].strip()
-    else:
-        sleepTime = 1
+    '''   
 
     sentCommand = "adb shell "
 
@@ -57,8 +52,20 @@ def sendCommand(command:str):
         app = command[command.find("(") + 1:command.find(")")].strip()
         sentCommand += openApp(app)
 
-    os.system(sentCommand)
-    sleep(sleepTime)
+    # Set sleep between tests
+    if command.find("{") > -1:
+        sleepTime = int(command[command.find("{") + 1:command.find("}")].strip())
+    else:
+        sleepTime = 1
+
+    # Repeat command
+    if command.find("[") > -1:
+        for count in range(int(command[command.find("[") + 1:command.find("]")].strip())):
+            os.system(sentCommand)
+            sleep(sleepTime)
+    else:
+        os.system(sentCommand)
+        sleep(sleepTime)
 
 def getCommands(test_case:str):
 
@@ -79,7 +86,7 @@ def getCommands(test_case:str):
             with open(f"{root}/test-cases/{test_case}.tca", "r") as test_caseCommads:
                 commands = []
                 for command in test_caseCommads.readlines():
-                    if command.find("#") == -1:
+                    if command[1] != "#":
                         commands.append(command.strip("\n"))
                 return commands
 
@@ -116,4 +123,4 @@ def execTestCycle(test_cycle:str):
             sys.stdout.write(logging)
             sys.stdout.flush()            
         print(f" Complete")
-        
+
