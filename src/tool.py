@@ -1,5 +1,7 @@
 import os
-from touch import *
+from commands import *
+
+root = os.getcwd()
 
 def sendCommand(command:str):
 
@@ -30,9 +32,21 @@ def sendCommand(command:str):
         duration = command[command.find(y2) + (len(y2) + 1):command.find(")", command.find(y2) + (len(y2) + 1))].strip()
         os.system(dragAndDrop(x1, y1, x2, y2, duration))
 
+    elif command.find("OPEN") > -1:
+        app = command[command.find("(") + 1:command.find(")")].strip()
+        os.system(openApp(app))
 
-
-sendCommand("TAP(23, 59)")
-sendCommand("SWIPE(123.5, 694.8, 213.4, 2321.2, 5000)")
-sendCommand("DRAGDROP(123.5, 694.8, 213.4, 2321.2, 5000)")
+def getCommands(test_case:str):
+    if not os.path.exists(f"{root}/test-cases"):
+        os.mkdir(f"{root}/test-cases")
+        print(f"'{test_case}' not found. Please create it on 'test-cases' folder.")
+        return
+    else:
+        if not os.path.exists(f"{root}/test-cases/{test_case}.tca"):
+            print(f"'{test_case}' not found. Please create it on 'test-cases' folder.")
+            return
+        else:
+            with open(f"{root}/test-cases/{test_case}.tca", "r") as test_caseCommads:
+                commands = test_caseCommads.readlines()
+                return commands
 
