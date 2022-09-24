@@ -11,10 +11,12 @@ def sendCommand(command:str):
     command.
     '''
 
+    sentCommand = "adb shell "
+
     if command.find("TAP") > -1:
         x = command[command.find("(") + 1:command.find(",")].strip()
         y = command[command.find(",") + 1:command.find(")")].strip()
-        os.system(tap(x, y))
+        sentCommand += tap(x, y)
 
     elif command.find("SWIPE") > -1:
         x1 = command[command.find("(") + 1:command.find(",")].strip()
@@ -25,10 +27,10 @@ def sendCommand(command:str):
         if command.find(",", command.find(x2) + (len(x2) + 1)) > -1:
             y2 = command[command.find(x2) + (len(x2) + 1):command.find(",", command.find(x2) + (len(x2) + 1))].strip()
             duration = command[command.find(y2) + (len(y2) + 1):command.find(")", command.find(y2) + (len(y2) + 1))].strip()
-            os.system(swipe(x1, y1, x2, y2, duration))
+            sentCommand += swipe(x1, y1, x2, y2, duration)
         elif command.find(")", command.find(x2) + (len(x2) + 1)) > -1:
             y2 = command[command.find(x2) + (len(x2) + 1):command.find(")", command.find(x2) + (len(x2) + 1))].strip()
-            os.system(swipe(x1, y1, x2, y2))
+            sentCommand += swipe(x1, y1, x2, y2)
 
     elif command.find("DRAGDROP") > -1:
         x1 = command[command.find("(") + 1:command.find(",")].strip()
@@ -36,11 +38,13 @@ def sendCommand(command:str):
         x2 = command[command.find(y1) + (len(y1) + 1):command.find(",", command.find(y1) + (len(y1) + 1))].strip()
         y2 = command[command.find(x2) + (len(x2) + 1):command.find(",", command.find(x2) + (len(x2) + 1))].strip()
         duration = command[command.find(y2) + (len(y2) + 1):command.find(")", command.find(y2) + (len(y2) + 1))].strip()
-        os.system(dragAndDrop(x1, y1, x2, y2, duration))
+        sentCommand += dragAndDrop(x1, y1, x2, y2, duration)
 
     elif command.find("OPEN") > -1:
         app = command[command.find("(") + 1:command.find(")")].strip()
-        os.system(openApp(app))
+        sentCommand += openApp(app)
+    
+    os.system(sentCommand)
 
 def getCommands(test_case:str):
 
