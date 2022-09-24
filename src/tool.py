@@ -159,14 +159,21 @@ def execTestCycle(test_cycle:str):
     if not os.path.exists(f"{root}/test-execution"):
             os.mkdir(f"{root}/test-execution")
     
-    result_folder = f"{root}/test-execution/{datetime.now().day}{datetime.now().month}{datetime.now().year}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
-    os.mkdir(result_folder)
+    # Create test cycle folder
+    result_folder = f"{root}/test-execution/{test_cycle}_{datetime.now().day}{datetime.now().month}{datetime.now().year}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
+    os.mkdir(result_folder)    
 
     # Start execution
+    testCycle_log = []
+    testCase_number = 1
     for testCase in getTestCases(test_cycle):
-        testCase_results = f"{result_folder}/{testCase}"
+
+        # Creating test case folder
+        testCase_results = f"{result_folder}/{testCase_number}_{testCase}"
         os.mkdir(testCase_results)
-        logging = f"Executing '{testCase}'"
+
+        # Sending commands to device
+        logging = f"[EXECUTING] {testCase}"
         results = []
         for command in getCommands(testCase):
             if command != "":                
@@ -175,10 +182,19 @@ def execTestCycle(test_cycle:str):
                 sys.stdout.write("\r")
                 sys.stdout.write(logging)
                 sys.stdout.flush()
+
+        # Logging results
         if "Fail" in results:
-            print(f" Fail")
+            testCycle_log.append(f"[FAIL] {testCase_number} - {testCase}")
         elif "Error" in results:
-            print(f" Error")
+            testCycle_log.append(f"[ERROR] {testCase_number} - {testCase}")
         else:
-            print(f" Pass")
+            testCycle_log.append(f"[PASS] {testCase_number} - {testCase}")
+        
+        os.system("clear")
+        for log in testCycle_log:
+            print(log)
+
+        
+        testCase_number += 1
 
