@@ -1,5 +1,6 @@
-from cgi import test
+import sys
 import os
+from time import sleep
 from commands import *
 
 root = os.getcwd()
@@ -11,6 +12,11 @@ def sendCommand(command:str):
     command.
     '''
 
+    if command.find("{") > -1:
+        sleepTime = command[command.find("{") + 1:command.find("}")].strip()
+    else:
+        sleepTime = 1
+
     sentCommand = "adb shell "
 
     if command.find("TAP") > -1:
@@ -19,17 +25,24 @@ def sendCommand(command:str):
         sentCommand += tap(x, y)
 
     elif command.find("SWIPE") > -1:
-        x1 = command[command.find("(") + 1:command.find(",")].strip()
-        y1 = command[command.find(x1) + (len(x1) + 1):command.find(",", command.find(x1) + (len(x1) + 1))].strip()
-        x2 = command[command.find(y1) + (len(y1) + 1):command.find(",", command.find(y1) + (len(y1) + 1))].strip()
+
+        x1_position = command.find("(") + 1
+        x1 = command[x1_position:command.find(",", x1_position)].strip()
+        y1_position = command.find(",", x1_position) + 1
+        y1 = command[y1_position:command.find(",", y1_position)].strip()
+        x2_position = command.find(",", y1_position) + 1
+        x2 = command[x2_position:command.find(",", x2_position)].strip()        
 
         # Conditional logic in case of user don't give duration
-        if command.find(",", command.find(x2) + (len(x2) + 1)) > -1:
-            y2 = command[command.find(x2) + (len(x2) + 1):command.find(",", command.find(x2) + (len(x2) + 1))].strip()
-            duration = command[command.find(y2) + (len(y2) + 1):command.find(")", command.find(y2) + (len(y2) + 1))].strip()
+        if command.find(",", x2_position + (len(x2) + 2)) > -1:
+            y2_position = command.find(",", x2_position) + 1
+            y2 = command[y2_position:command.find(",", y2_position)].strip()
+            duration_position = command.find(",", y2_position) + 1
+            duration = command[duration_position:command.find(")", duration_position)].strip()
             sentCommand += swipe(x1, y1, x2, y2, duration)
-        elif command.find(")", command.find(x2) + (len(x2) + 1)) > -1:
-            y2 = command[command.find(x2) + (len(x2) + 1):command.find(")", command.find(x2) + (len(x2) + 1))].strip()
+        elif command.find(")", x2_position + (len(x2) + 2)) > -1:
+            y2_position = command.find(",", x2_position) + 1
+            y2 = command[y2_position:command.find(",", y2_position)].strip()
             sentCommand += swipe(x1, y1, x2, y2)
 
     elif command.find("DRAGDROP") > -1:
@@ -43,8 +56,9 @@ def sendCommand(command:str):
     elif command.find("OPEN") > -1:
         app = command[command.find("(") + 1:command.find(")")].strip()
         sentCommand += openApp(app)
-    
+
     os.system(sentCommand)
+    sleep(sleepTime)
 
 def getCommands(test_case:str):
 
@@ -65,7 +79,8 @@ def getCommands(test_case:str):
             with open(f"{root}/test-cases/{test_case}.tca", "r") as test_caseCommads:
                 commands = []
                 for command in test_caseCommads.readlines():
-                    commands.append(command.strip("\n"))
+                    if command.find("#") == -1:
+                        commands.append(command.strip("\n"))
                 return commands
 
 def getTestCases(test_cycle:str):
@@ -90,3 +105,15 @@ def getTestCases(test_cycle:str):
                     testCases.append(testCase.strip("\n"))
                 return testCases
 
+def execTestCycle(test_cycle:str):
+
+    for testCase in getTestCases(test_cycle):
+        logging = f"Executing '{testCase}'"             
+        for command in getCommands(testCase):            
+            sendCommand(command)            
+            logging += "."
+            sys.stdout.write("\r")
+            sys.stdout.write(logging)
+            sys.stdout.flush()            
+        print(f" Complete")
+        
