@@ -109,8 +109,23 @@ def sendCommand(command:str, result:list, result_folder:str):
 
     elif command.find("COMPARE_IMAGE") == 0:
 
-        referenceImage = command[command.find("(") + 1:command.find(",")].strip()
-        passRate = command[command.find(",") + 1:command.find(")")].strip()
+        referenceImage = command[command.find("(") + 1:command.find(",")].strip()        
+
+        # Localized
+        if command.find(";", command.find(",") + 1) > -1:
+            passRate = command[command.find(",") + 1:command.find(";")].strip()
+
+            left_position = command.find(";") + 1
+            left = command[left_position:command.find(",", left_position)].strip()
+            top_position = command.find(",", left_position) + 1
+            top = command[top_position:command.find(",", top_position)].strip()
+            right_position = command.find(",", top_position) + 1
+            right = command[right_position:command.find(",", right_position)].strip()
+            bottom_position = command.find(",", right_position) + 1
+            bottom = command[bottom_position:command.find(")", bottom_position)].strip()            
+        else:
+            passRate = command[command.find(",") + 1:command.find(")")].strip()
+
 
         # Checking parameters
         try:
@@ -119,9 +134,19 @@ def sendCommand(command:str, result:list, result_folder:str):
             if not os.path.exists(f"{root}/reference/{referenceImage}"):
                 result.append("Invalid")
                 return
+
+            if command.find(";", command.find(",") + 1) > -1:
+                check = int(left)
+                check = int(top)
+                check = int(right)
+                check = int(bottom)
         except:
             result.append("Invalid")
             return        
+
+        # Authorize command
+        result_folder += f"/capture-image_{datetime.now().day}{datetime.now().month}{datetime.now().year}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
+        os.mkdir(result_folder)
 
         sentCommand_ = sentCommand + captureImage()
         validationImage = sentCommand_[sentCommand_.find("/", sentCommand_.find("sdcard")) + 1:]
@@ -132,12 +157,26 @@ def sendCommand(command:str, result:list, result_folder:str):
 
         os.system(sentCommand_)
 
-        original = np.array(Image.open(f"{result_folder}/{validationImage}"))
-        reference = np.array(Image.open(f"{root}/reference/{referenceImage}"))
+        # Comparing and giving result       
 
-        comparison = uqi(original, reference) * 100
+        # Localized
+        if command.find(";", command.find(",") + 1) > -1:
+            Image.open(f"{root}/reference/{referenceImage}").crop((int(left), int(top), int(right), int(bottom))).save(f"{result_folder}/expected.png")
+            Image.open(f"{result_folder}/{validationImage}").crop((int(left), int(top), int(right), int(bottom))).save(f"{result_folder}/output.png")
+
+            expected = np.array(Image.open(f"{result_folder}/expected.png"))
+            output = np.array(Image.open(f"{result_folder}/output.png"))
+
+            comparison = uqi(expected, output) * 100
+            os.remove(f"{result_folder}/{validationImage}")
         
-        if comparison >= passRate:
+        # Default
+        else:       
+            expected = np.array(Image.open(f"{root}/reference/{referenceImage}"))
+            output = np.array(Image.open(f"{result_folder}/{validationImage}"))     
+            comparison = uqi(expected, output) * 100
+        
+        if comparison >= float(passRate):
             result.append("Pass")
         else:
             result.append("Fail")
