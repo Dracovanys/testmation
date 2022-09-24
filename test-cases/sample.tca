@@ -1,3 +1,5 @@
+# Put your android device on Home Screen
+
 SWIPE(550.0, 60.0, 550.0, 2040.0, 150)
 SWIPE(550.0, 2040.0, 550.0, 60.0, 150)
 SWIPE(550.0, 60.0, 550.0, 2040.0, 150)

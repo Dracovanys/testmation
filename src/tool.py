@@ -182,4 +182,3 @@ def execTestCycle(test_cycle:str):
         else:
             print(f" Pass")
 
-execTestCycle("sample")
