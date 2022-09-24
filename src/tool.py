@@ -1,9 +1,15 @@
+from cgi import test
 import os
 from commands import *
 
 root = os.getcwd()
 
 def sendCommand(command:str):
+
+    '''
+    Different treatment for each
+    command.
+    '''
 
     if command.find("TAP") > -1:
         x = command[command.find("(") + 1:command.find(",")].strip()
@@ -37,6 +43,12 @@ def sendCommand(command:str):
         os.system(openApp(app))
 
 def getCommands(test_case:str):
+
+    '''
+    Return all commands in a TCA file
+    as a string list
+    '''
+
     if not os.path.exists(f"{root}/test-cases"):
         os.mkdir(f"{root}/test-cases")
         print(f"'{test_case}' not found. Please create it on 'test-cases' folder.")
@@ -47,6 +59,30 @@ def getCommands(test_case:str):
             return
         else:
             with open(f"{root}/test-cases/{test_case}.tca", "r") as test_caseCommads:
-                commands = test_caseCommads.readlines()
+                commands = []
+                for command in test_caseCommads.readlines():
+                    commands.append(command.strip("\n"))
                 return commands
+
+def getTestCases(test_cycle:str):
+
+    '''
+    Return all test cases described in a
+    TCY file as a string list
+    '''
+
+    if not os.path.exists(f"{root}/test-cycle"):
+        os.mkdir(f"{root}/test-cycle")
+        print(f"'{test_cycle}' not found. Please create it on 'test-cycle' folder.")
+        return
+    else:
+        if not os.path.exists(f"{root}/test-cycle/{test_cycle}.tcy"):
+            print(f"'{test_cycle}' not found. Please create it on 'test-cycle' folder.")
+            return
+        else:
+            with open(f"{root}/test-cycle/{test_cycle}.tcy", "r") as test_cycleCases:
+                testCases = []
+                for testCase in test_cycleCases.readlines():
+                    testCases.append(testCase.strip("\n"))
+                return testCases
 
