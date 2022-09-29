@@ -17,7 +17,14 @@ def sendCommand(command:str, result:list, result_folder:str):
 
     sentCommand = "adb "
 
+    # Interaction commands
+
     if command.find("TAP") == 0:
+
+        '''
+        TAP(x, y) - Tap screen on passed position
+        '''
+
         x = command[command.find("(") + 1:command.find(",")].strip()
         y = command[command.find(",") + 1:command.find(")")].strip()
 
@@ -32,6 +39,14 @@ def sendCommand(command:str, result:list, result_folder:str):
         sentCommand += tap(x, y)
 
     elif command.find("SWIPE") == 0:
+
+        '''
+        SWIPE(x1, y1, x2, y2, *duration) - Do a swipe on screen from x1-y1 position
+        to x2-y2 position.
+
+        *This parameter is used to define how much time the swipe process will get
+        to complete, it's optional with 1000 milliseconds by default.
+        '''
 
         x1_position = command.find("(") + 1
         x1 = command[x1_position:command.find(",", x1_position)].strip()
@@ -79,6 +94,12 @@ def sendCommand(command:str, result:list, result_folder:str):
             sentCommand += swipe(x1, y1, x2, y2)
 
     elif command.find("DRAGDROP") == 0:
+
+        '''
+        DRAGDROP(x1, y1, x2, y2, duration) - Drag some item on a screen location (x1, y1) and drop it on
+        another location (x2, y2) during some milliseconds (duration).
+        '''
+
         x1 = command[command.find("(") + 1:command.find(",")].strip()
         y1 = command[command.find(x1) + (len(x1) + 1):command.find(",", command.find(x1) + (len(x1) + 1))].strip()
         x2 = command[command.find(y1) + (len(y1) + 1):command.find(",", command.find(y1) + (len(y1) + 1))].strip()
@@ -98,6 +119,11 @@ def sendCommand(command:str, result:list, result_folder:str):
         sentCommand += dragAndDrop(x1, y1, x2, y2, duration)
 
     elif command.find("OPEN") == 0:
+        
+        '''
+        OPEN(com.[app].[something]) - Open a specified app.
+        '''
+
         app = command[command.find("(") + 1:command.find(")")].strip()
 
         # Checking parameters
@@ -107,7 +133,19 @@ def sendCommand(command:str, result:list, result_folder:str):
 
         sentCommand += openApp(app)        
 
+    # Verification commands
+
     elif command.find("COMPARE_IMAGE") == 0:
+
+        '''
+        COMPARE_IMAGE(referenceimage.extension, similarityRate; x1, y1, x2, y2) - Compare a printscreen got during
+        test execution and compare with a reference printscreen got previously based on a similarity rate (integer number).
+
+        Reference Image should be put on "reference" folder to be used by tool.
+        
+        OPTIONAL: x1, y1, x2, y2 are float variables (xxxx.x) used just to compare crops of both screens if you want a refined
+        comparison.
+        '''
 
         referenceImage = command[command.find("(") + 1:command.find(",")].strip()        
 
@@ -142,7 +180,7 @@ def sendCommand(command:str, result:list, result_folder:str):
                 check = int(bottom)
         except:
             result.append("Invalid")
-            return        
+            return
 
         # Authorize command
         result_folder += f"/capture-image_{datetime.now().day}{datetime.now().month}{datetime.now().year}{datetime.now().hour}{datetime.now().minute}{datetime.now().second}"
@@ -167,14 +205,23 @@ def sendCommand(command:str, result:list, result_folder:str):
             expected = np.array(Image.open(f"{result_folder}/expected.png"))
             output = np.array(Image.open(f"{result_folder}/output.png"))
 
-            comparison = uqi(expected, output) * 100
+            try:
+                comparison = uqi(expected, output) * 100
+            except AssertionError:
+                result.append("AssertionError")
+                return
             os.remove(f"{result_folder}/{validationImage}")
         
         # Default
         else:       
             expected = np.array(Image.open(f"{root}/reference/{referenceImage}"))
-            output = np.array(Image.open(f"{result_folder}/{validationImage}"))     
-            comparison = uqi(expected, output) * 100
+            output = np.array(Image.open(f"{result_folder}/{validationImage}"))
+
+            try:
+                comparison = uqi(expected, output) * 100
+            except AssertionError:
+                result.append("AssertionError")
+                return
         
         if comparison >= float(passRate):
             result.append("Pass")
@@ -295,6 +342,8 @@ def execTestCycle(test_cycle:str):
             testCycle_log.append(f"[FAIL] {testCase_number} - {testCase}")
         elif "Invalid" in results:
             testCycle_log.append(f"[INVALID] {testCase_number} - {testCase}")
+        elif "AssertionError" in results:
+            testCycle_log.append(f"[ERROR] {testCase_number} - {testCase} (Reference image haven't the same dimensions of device screen.)")
         else:
             testCycle_log.append(f"[PASS] {testCase_number} - {testCase}")
         
