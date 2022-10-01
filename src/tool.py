@@ -30,8 +30,8 @@ def sendCommand(command:str, result:list, result_folder:str):
 
         # Checking parameters
         try:
-            check = float(x)
-            check = float(y)
+            x = float(x)
+            y = float(y)
         except:
             result.append("Invalid")
             return
@@ -64,11 +64,11 @@ def sendCommand(command:str, result:list, result_folder:str):
 
             # Checking parameters
             try:
-                check = float(x1)
-                check = float(y1)
-                check = float(x2)
-                check = float(y2)
-                check = int(duration)
+                x1 = float(x1)
+                y1 = float(y1)
+                x2 = float(x2)
+                y2 = float(y2)
+                duration = int(duration)
             except:
                 result.append("Invalid")
                 return
@@ -82,10 +82,10 @@ def sendCommand(command:str, result:list, result_folder:str):
 
             # Checking parameters
             try:
-                check = float(x1)
-                check = float(y1)
-                check = float(x2)
-                check = float(y2)
+                x1 = float(x1)
+                y1 = float(y1)
+                x2 = float(x2)
+                y2 = float(y2)
             except:
                 result.append("Invalid")
                 return
@@ -108,10 +108,10 @@ def sendCommand(command:str, result:list, result_folder:str):
 
         # Checking parameters
         try:
-            check = float(x1)
-            check = float(y1)
-            check = float(x2)
-            check = float(y2)
+            x1 = float(x1)
+            y1 = float(y1)
+            x2 = float(x2)
+            y2 = float(y2)
         except:
             result.append("Invalid")
             return
@@ -167,17 +167,17 @@ def sendCommand(command:str, result:list, result_folder:str):
 
         # Checking parameters
         try:
-            check = float(passRate)
+            passRate = float(passRate)
 
             if not os.path.exists(f"{root}/reference/{referenceImage}"):
                 result.append("Invalid")
                 return
 
             if command.find(";", command.find(",") + 1) > -1:
-                check = int(left)
-                check = int(top)
-                check = int(right)
-                check = int(bottom)
+                left = float(left)
+                top = float(top)
+                right = float(right)
+                bottom = float(bottom)
         except:
             result.append("Invalid")
             return
