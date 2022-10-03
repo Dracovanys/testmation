@@ -79,9 +79,9 @@ class DeviceViewer(QWidget):
 
         name = QFileDialog.getOpenFileName(self, "Open screen", reference_path, "Screenshot file (*.png)")
         self.screenshot_path = name[0]
-
-        self.showScreen()
+        
         if os.path.exists(self.screenshot_path):
+            self.showScreen()
             self.saveScreen_btn.setEnabled(False)
 
     def getScreen_click(self):
@@ -240,7 +240,12 @@ class SaveScreen(QDialog):
         
     def save_click(self):
         if self.screenName_tbox.text() != "":
-            shutil.copyfile(self.screenshot_path, reference_path + f"/{self.screenName_tbox.text()}.png")
+            screenName = self.screenName_tbox.text()
+
+            if screenName.find("."):
+                screenName = screenName.split(".", 1)[0]
+
+            shutil.copyfile(self.screenshot_path, reference_path + f"/{screenName}.png")
             self.close()
         
         
