@@ -2,7 +2,7 @@ import os
 import shutil
 from src.commands import captureImage, getImage
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QPushButton, QDesktopWidget, QLabel, QDialog, QLineEdit
+from PyQt5.QtWidgets import QWidget, QPushButton, QDesktopWidget, QLabel, QDialog, QLineEdit, QFileDialog
 from PyQt5.QtGui import QPixmap, QCloseEvent, QPainter, QPen
 
 root_path = os.getcwd()
@@ -25,17 +25,23 @@ class DeviceViewer(QWidget):
         self.screenView.setGeometry(30, 30, 589, 740)
         self.screenView.setStyleSheet("border: 1px solid black;")
         self.screenView.mousePressEvent = self.getTapPosition
-        
+
+        # "Open screen" button
+        openScreen_btn = QPushButton(self)
+        openScreen_btn.setText("Open screen")
+        openScreen_btn.setGeometry(650, 30, 320, 40)
+        openScreen_btn.clicked.connect(self.openScreen_click)
+
         # "Get screen" button
         getScreen_btn = QPushButton(self)
         getScreen_btn.setText("Get screen")
-        getScreen_btn.setGeometry(650, 90, 320, 40)
+        getScreen_btn.setGeometry(650, 85, 320, 40)
         getScreen_btn.clicked.connect(self.getScreen_click)
 
         # "Save screen" button
         self.saveScreen_btn = QPushButton(self)
         self.saveScreen_btn.setText("Save screen")
-        self.saveScreen_btn.setGeometry(650, 145, 320, 40)
+        self.saveScreen_btn.setGeometry(650, 140, 320, 40)
         self.saveScreen_btn.clicked.connect(self.saveScreen_click)
         self.saveScreen_btn.setEnabled(False)
 
@@ -64,11 +70,25 @@ class DeviceViewer(QWidget):
             shutil.rmtree(f"{root_path}/temp")
         return super().closeEvent(a0)
 
+    def openScreen_click(self):
+
+        '''
+        Open a dialog to user choose which screenshot 
+        it want to see on Screen Viewer
+        '''
+
+        name = QFileDialog.getOpenFileName(self, "Open screen", reference_path, "Screenshot file (*.png)")
+        self.screenshot_path = name[0]
+
+        self.showScreen()
+        if os.path.exists(self.screenshot_path):
+            self.saveScreen_btn.setEnabled(False)
+
     def getScreen_click(self):
 
         '''
         Take a screenshot from device screen
-        and shows on Screen View
+        and shows it on Screen View
         '''        
 
         command = f"adb {captureImage()}"
@@ -86,7 +106,22 @@ class DeviceViewer(QWidget):
         os.system(command)
 
         self.screenshot_path = f"{temp_path}/{self.screenshot}"
-        
+
+        self.showScreen()
+
+        if os.path.exists(self.screenshot_path):
+            self.saveScreen_btn.setEnabled(True)
+
+    def saveScreen_click(self):
+        dlg = SaveScreen(self.screenshot_path)
+    
+    def showScreen(self):
+
+        '''
+        Scale image on "self.screenshot_path" it order to give
+        a proper visualization of it to user
+        '''
+
         self.image = QPixmap(self.screenshot_path)
 
         # Scale screenshot according with Screen View size
@@ -112,14 +147,8 @@ class DeviceViewer(QWidget):
         self.x1Position_txt.setText("")
         self.y1Position_txt.setText("")
         self.x2Position_txt.setText("")
-        self.y2Position_txt.setText("")
+        self.y2Position_txt.setText("")        
 
-        if os.path.exists(self.screenshot_path):
-            self.saveScreen_btn.setEnabled(True)
-
-    def saveScreen_click(self):
-        dlg = SaveScreen(self.screenshot_path)
-    
     def getTapPosition(self, event):
 
         '''
