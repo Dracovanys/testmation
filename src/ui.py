@@ -3,7 +3,7 @@ import shutil
 from src.commands import captureImage, getImage
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QPushButton, QDesktopWidget, QLabel, QDialog, QLineEdit
-from PyQt5.QtGui import QPixmap, QCloseEvent
+from PyQt5.QtGui import QPixmap, QCloseEvent, QPainter, QPen
 
 root_path = os.getcwd()
 reference_path = f"{root_path}/reference"
@@ -19,6 +19,12 @@ class DeviceViewer(QWidget):
         qtRectangle = self.frameGeometry()
         qtRectangle.moveCenter(centerPoint)
         self.move(qtRectangle.topLeft())
+
+        # Screen View
+        self.screenView = QLabel(self)
+        self.screenView.setGeometry(30, 30, 589, 740)
+        self.screenView.setStyleSheet("border: 1px solid black;")
+        self.screenView.mousePressEvent = self.getTapPosition
         
         # "Get screen" button
         getScreen_btn = QPushButton(self)
@@ -33,11 +39,22 @@ class DeviceViewer(QWidget):
         self.saveScreen_btn.clicked.connect(self.saveScreen_click)
         self.saveScreen_btn.setEnabled(False)
 
-        # Screen View
-        self.screenView = QLabel(self)
-        self.screenView.setGeometry(30, 30, 589, 740)
-        self.screenView.setStyleSheet("border: 1px solid black;")
-        self.screenView.mousePressEvent = self.getCoordinates
+        # Interaction info
+        self.interactionType_txt = QLabel(self)
+        self.interactionType_txt.setGeometry(795, 270, 150, 30)
+        self.interactionType_txt.setStyleSheet("font: 20px")
+
+        self.x1Position_txt = QLabel(self)
+        self.x1Position_txt.setGeometry(715, 320, 80, 30)
+
+        self.y1Position_txt = QLabel(self)
+        self.y1Position_txt.setGeometry(860, 320, 80, 30)
+
+        self.x2Position_txt = QLabel(self)
+        self.x2Position_txt.setGeometry(715, 345, 80, 30)
+
+        self.y2Position_txt = QLabel(self)
+        self.y2Position_txt.setGeometry(860, 345, 80, 30)
 
         # Show Device Viewer
         self.show()
@@ -90,13 +107,20 @@ class DeviceViewer(QWidget):
         # print(f"Screen View: {self.screenView.width()}x{self.screenView.height()} / Image: {self.image_adjusted.width()}x{self.image_adjusted.height()}")
         self.screenView.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # Reset interaction info
+        self.interactionType_txt.setText("")
+        self.x1Position_txt.setText("")
+        self.y1Position_txt.setText("")
+        self.x2Position_txt.setText("")
+        self.y2Position_txt.setText("")
+
         if os.path.exists(self.screenshot_path):
             self.saveScreen_btn.setEnabled(True)
 
     def saveScreen_click(self):
         dlg = SaveScreen(self.screenshot_path)
     
-    def getCoordinates(self, event):
+    def getTapPosition(self, event):
 
         '''
         Return mouse position on screenshot considering
@@ -121,7 +145,26 @@ class DeviceViewer(QWidget):
             elif mouseY_pos > self.image.height():
                 mouseY_pos = self.image.height()
 
-            print("{:.1f}, {:.1f}".format(mouseX_pos, mouseY_pos))
+            # Draw lines to mark positions
+            self.screenView.setPixmap(self.image_adjusted)
+            image_draw = self.screenView.pixmap()
+            painter = QPainter(image_draw)
+            painter.setPen(QPen(Qt.blue, 0.8))
+
+            line_xPosition = event.pos().x() - ((self.screenView.width() - self.image_adjusted.width()) / 2)
+            line_yPosition = event.pos().y() - ((self.screenView.height() - self.image_adjusted.height()) / 2)
+
+            painter.drawLine(0, line_yPosition, self.screenView.width(), line_yPosition) # Horizontal line
+            painter.drawLine(line_xPosition, 0, line_xPosition, self.screenView.pixmap().height()) # Vertical line
+            painter.end()
+            self.screenView.setPixmap(image_draw)
+
+            # Show coordinates
+            self.interactionType_txt.setText("Tap")
+            self.x1Position_txt.setText("X: {:.1f}".format(mouseX_pos))
+            self.y1Position_txt.setText("Y: {:.1f}".format(mouseY_pos))
+            self.x2Position_txt.setText("")
+            self.y2Position_txt.setText("")
 
 class SaveScreen(QDialog):
     def __init__(self, screenshot_path):

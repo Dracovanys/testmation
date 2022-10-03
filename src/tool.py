@@ -144,7 +144,7 @@ def sendCommand(command:str, result:list, result_folder:str):
         Reference Image should be put on "reference" folder to be used by tool.
         
         OPTIONAL: x1, y1, x2, y2 are float variables (xxxx.x) used just to compare crops of both screens if you want a refined
-        comparison.
+        comparison. x1-y1 are left-top and x2-y2 are right-bottom.
         '''
 
         referenceImage = command[command.find("(") + 1:command.find(",")].strip()        
